@@ -21,7 +21,7 @@ db = pymysql.connect(host='43.143.201.36',
 cursor = db.cursor()
 # cursor.execute('select * from data')
 # data = cursor.fetchall()
-data = db_.get_all()
+data = db_.get_all('ipblacklist')
 print(data)
 db.commit()
 db.close()

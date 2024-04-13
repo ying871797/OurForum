@@ -59,11 +59,7 @@ def test():
     return ip
 
 
-@app.route('/uploadImages', methods=['POST'])
-def upload_images():
-    pass
-
-
+# 获取聊天室列表
 @app.route('/get_chatroom')
 @cross_origin()
 def get_chatroom():
@@ -72,6 +68,7 @@ def get_chatroom():
     return res
 
 
+# 插入消息
 @app.route('/insert_data', methods=['POST'])
 def insert_data():
     db = Mysql()
@@ -103,14 +100,54 @@ def insert_data():
                           request.json.get('address'))
 
 
-@app.route('/get_all_data', methods=['POST'])
-def getalldata():
+# 黑名单ip添加
+@app.route('/add_black_ip', methods=['POST'])
+def add_black_ip():
+    db = Mysql()
+    return db.insert_black_ip(request.json.get('ip'))
+
+
+@app.route('/get_message', methods=['POST'])
+def get_message():
     db = Mysql()
     print(request.json.get('get_count'))
+    # 根据type获取不同数量的数据
     res = db.get_message(request.json.get('chatroom'), request.json.get('get_count'), int(request.json.get('type')))
     return res
 
 
+# 修改消息
+@app.route('/update_message', methods=['POST'])
+def update_message():
+    db = Mysql()
+    return db.update_message(request.json.get('data'))
+
+
+# 删除消息及图片
+@app.route('/delete_message', methods=['POST'])
+def delete_message():
+    db = Mysql()
+    # 图片删除
+    data = request.json.get('data')
+    imgSrc = data['imgSrc'].split(',')
+    path = '../ourforump/src/assets/upload/'
+    for i in imgSrc:
+        if os.path.exists(path + i):
+            os.remove(path + i)
+        else:
+            print("删除文件失败")
+    return db.delete_message(request.json.get('data'))
+
+
+# 获取所有数据（指定表）
+@app.route('/get_all', methods=['POST'])
+def get_all():
+    db = Mysql()
+    res = db.get_all(str(request.json.get('table')))
+    return res
+
+
+# 获取指定密码
 @app.route('/get_pass', methods=['POST'])
 def getpass():
     db = Mysql()
@@ -118,6 +155,7 @@ def getpass():
     return res
 
 
+# 获取公告
 @app.route('/get_notice', methods=['POST'])
 def getnotice():
     db = Mysql()
