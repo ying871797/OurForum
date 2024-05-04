@@ -63,7 +63,7 @@ def test():
 @app.route('/get_chatroom')
 @cross_origin()
 def get_chatroom():
-    db = Mysql()
+    db = Mysql('data')
     res = db.get_chatroom()
     return res
 
@@ -71,7 +71,7 @@ def get_chatroom():
 # 插入消息
 @app.route('/insert_data', methods=['POST'])
 def insert_data():
-    db = Mysql()
+    db = Mysql('data')
     # 脏话屏蔽
     actree = build_tree(wordlist=zh_list)
     sender_cp = request.json.get('sender')
@@ -103,46 +103,87 @@ def insert_data():
 # 黑名单ip添加
 @app.route('/add_black_ip', methods=['POST'])
 def add_black_ip():
-    db = Mysql()
+    db = Mysql('data')
     return db.insert_black_ip(request.json.get('ip'))
 
 
 @app.route('/get_message', methods=['POST'])
 def get_message():
-    db = Mysql()
-    print(request.json.get('get_count'))
+    db = Mysql('data')
     # 根据type获取不同数量的数据
     res = db.get_message(request.json.get('chatroom'), request.json.get('get_count'), int(request.json.get('type')))
+    # 添加评论数量
     return res
+
+
+@app.route('/get_comments', methods=['POST'])
+def get_comments():
+    db = Mysql('comments')
+    res = db.get_comment(request.json.get('msg_id'), request.json.get('chatroom'), request.json.get('get_count'),
+                         request.json.get('type'))
+    return res
+
+
+@app.route('/insert_comment', methods=['POST'])
+def insert_comment():
+    db = Mysql('comments')
+    # 脏话屏蔽
+    actree = build_tree(wordlist=zh_list)
+    sender_cp = request.json.get('sender')
+    content_cp = request.json.get('content')
+    # 循环查询并替换
+    for i in actree.iter(request.json.get('content')):
+        content_cp = content_cp.replace(i[1][1], "**")
+    for i in actree.iter(request.json.get('sender')):
+        sender_cp = sender_cp.replace(i[1][1], "**")
+    # 图片上传
+    all_path = []
+    save_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/ourforump/src/assets/upload/'
+    for i in request.json.get('imgSrc'):
+        # 生成唯一的文件名
+        unique_filename = str(uuid.uuid4())[:8] + ".png"
+        save_base64_image(i, save_path + unique_filename)
+        # 保存文件名到列表
+        all_path.append(unique_filename)
+    # 图片路径字符串替换特殊字符
+    path_str = ','.join(all_path).replace('\\', '\\\\')
+    print(path_str)
+    # 插入数据
+    return db.insert_comment(request.json.get('msg_id'), request.json.get('chatroom'), sender_cp, content_cp, path_str,
+                             int(request.json.get('type')),
+                             request.json.get('ip'),
+                             request.json.get('address'))
 
 
 # 修改消息
 @app.route('/update_message', methods=['POST'])
 def update_message():
-    db = Mysql()
+    db = Mysql('data')
     return db.update_message(request.json.get('data'))
 
 
 # 删除消息及图片
 @app.route('/delete_message', methods=['POST'])
 def delete_message():
-    db = Mysql()
+    db = Mysql('data')
     # 图片删除
     data = request.json.get('data')
     imgSrc = data['imgSrc'].split(',')
     path = '../ourforump/src/assets/upload/'
-    for i in imgSrc:
-        if os.path.exists(path + i):
-            os.remove(path + i)
-        else:
-            print("删除文件失败")
+    # 判断是否存在图片
+    if imgSrc == ['']:
+        for i in imgSrc:
+            if os.path.exists(path + i):
+                os.remove(path + i)
+            else:
+                print("删除文件失败")
     return db.delete_message(request.json.get('data'))
 
 
 # 获取所有数据（指定表）
 @app.route('/get_all', methods=['POST'])
 def get_all():
-    db = Mysql()
+    db = Mysql('data')
     res = db.get_all(str(request.json.get('table')))
     return res
 
@@ -150,15 +191,15 @@ def get_all():
 # 获取指定密码
 @app.route('/get_pass', methods=['POST'])
 def getpass():
-    db = Mysql()
+    db = Mysql('data')
     res = db.get_pass(request.json.get('passtype'))
     return res
 
 
 # 获取公告
 @app.route('/get_notice', methods=['POST'])
-def getnotice():
-    db = Mysql()
+def get_notice():
+    db = Mysql('data')
     res = db.get_notice(request.json.get('chatroom'))
     return res
 
