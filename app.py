@@ -1,4 +1,5 @@
 import base64
+import time
 import uuid
 import os
 
@@ -65,6 +66,21 @@ def test():
 def get_chatroom():
     db = Mysql('data')
     res = db.get_chatroom()
+    return res
+
+
+# 插入访问记录
+@app.route('/insert_aqr', methods=['POST'])
+def insert_aqr():
+    db = Mysql('aqr')
+    ip = request.json.get('ip')
+    page_name = request.json.get('page_name')
+    # 访问记录
+    with open(f'logs/{str(time.strftime("%Y%m%d"))}.log', 'a', encoding='utf-8') as f:
+        f.write('%s    %s    访问了%s\n' % (str(time.strftime("%Y/%m/%d %H:%M:%S")), ip, page_name))
+
+    # 访问量
+    res = db.insert_aqr()
     return res
 
 
@@ -171,7 +187,7 @@ def delete_message():
     imgSrc = data['imgSrc'].split(',')
     path = '../ourforump/src/assets/upload/'
     # 判断是否存在图片
-    if imgSrc == ['']:
+    if imgSrc != ['']:
         for i in imgSrc:
             if os.path.exists(path + i):
                 os.remove(path + i)
