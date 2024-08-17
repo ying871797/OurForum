@@ -69,16 +69,29 @@ def get_chatroom():
     return res
 
 
+# 获取访问量
+@app.route('/get_aqr', methods=['GET'])
+def get_aqr():
+    db = Mysql('data')
+    res = db.get_aqr()
+    print(json.dumps(res))
+    return json.dumps(res)
+
+
 # 插入访问记录
-@app.route('/insert_aqr', methods=['POST'])
+@app.route('/record_aqr', methods=['POST'])
 def insert_aqr():
-    db = Mysql('aqr')
     ip = request.json.get('ip')
     page_name = request.json.get('page_name')
     # 访问记录
     with open(f'logs/{str(time.strftime("%Y%m%d"))}.log', 'a', encoding='utf-8') as f:
         f.write('%s    %s    访问了%s\n' % (str(time.strftime("%Y/%m/%d %H:%M:%S")), ip, page_name))
+    return 'ok'
 
+
+@app.route('/insert_aqr', methods=['POST'])
+def insert_aqc():
+    db = Mysql('aqr')
     # 访问量
     res = db.insert_aqr()
     return res
