@@ -82,10 +82,11 @@ def get_aqr():
 @app.route('/record_aqr', methods=['POST'])
 def insert_aqr():
     ip = request.json.get('ip')
+    address = request.json.get('address')
     page_name = request.json.get('page_name')
     # 访问记录
-    with open(f'logs/{str(time.strftime("%Y%m%d"))}.log', 'a', encoding='utf-8') as f:
-        f.write('%s    %s    访问了%s\n' % (str(time.strftime("%Y/%m/%d %H:%M:%S")), ip, page_name))
+    with open(f'logs/{str(time.strftime("%Y%m%d"))}.log', 'a', encoding='utf-8') as file:
+        file.write('%s    %s [%s]    访问了%s\n' % (str(time.strftime("%Y/%m/%d %H:%M:%S")), ip, address, page_name))
     return 'ok'
 
 
