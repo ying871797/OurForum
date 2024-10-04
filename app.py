@@ -1,9 +1,9 @@
 import base64
-import time
-import uuid
 import os
+import uuid
 
 import ahocorasick
+import pandas as pd
 from PIL import Image
 from flask import Flask, request
 from flask_cors import cross_origin
@@ -85,8 +85,14 @@ def insert_aqr():
     address = request.json.get('address')
     page_name = request.json.get('page_name')
     # 访问记录
-    with open(f'logs/{str(time.strftime("%Y%m%d"))}.log', 'a', encoding='utf-8') as file:
-        file.write('%s    %s [%s]    访问了%s\n' % (str(time.strftime("%Y/%m/%d %H:%M:%S")), ip, address, page_name))
+    data = {
+        'datetime': [str(time.strftime("%Y/%m/%d %H:%M:%S"))],
+        'ip': [ip],
+        'address': [address],
+        'page_name': [page_name]
+    }
+    df = pd.DataFrame(data)
+    df.to_csv(f'logs/{str(time.strftime("%Y%m%d"))}.csv', mode='a', index=False, header=False, encoding='utf-8')
     return 'ok'
 
 
